@@ -23,6 +23,7 @@ interface JwtPayload {
 
 // Register a new user
 // TODO: Add email validation and more robust error handling
+// UNIQUE_CHANGE_FOR_COMMIT_35
 router.post("/register", async (req: Request<{}, {}, UserAuthRequestBody>, res: Response) => {
   try {
     const { name, email, password } = req.body;

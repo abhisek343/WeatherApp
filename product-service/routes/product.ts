@@ -39,6 +39,7 @@ router.post("/create", async (req: Request<{}, any, ProductRequestBody>, res: Re
 router.get("/", async (req: Request, res: Response) => {
   try {
     // TODO: Implement pagination for fetching all products
+    // UNIQUE_CHANGE_FOR_COMMIT_36
     const products: IProduct[] = await Product.find();
     res.json(products);
   } catch (err: any) {

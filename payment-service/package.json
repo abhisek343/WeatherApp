@@ -1,7 +1,7 @@
 {
   "name": "payment-service",
   "version": "1.0.0",
-  "description": "",
+  "description": "Payment processing service for e-commerce.",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",

@@ -23,6 +23,7 @@ const transporter = nodemailer.createTransport({
  * @param {string} text - The plain text body of the email.
  * @returns {Promise<void>} A promise that resolves when the email is sent or rejects on error.
  */
+// UNIQUE_CHANGE_FOR_COMMIT_40
 const sendEmail = async (to: string, subject: string, text: string): Promise<void> => {
   const mailOptions: MailOptions = {
     from: process.env.NODEMAILER_EMAIL, // Sender address

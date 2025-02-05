@@ -5,7 +5,7 @@ metadata:
   labels:
     app: order-service
 spec:
-  replicas: 3 # Adjust as needed for load
+  replicas: 3 # Adjust as needed for load # UNIQUE_CHANGE_FOR_COMMIT_45
   selector:
     matchLabels:
       app: order-service

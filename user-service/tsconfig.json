@@ -5,7 +5,7 @@
     "outDir": "./dist",
     "rootDir": "./",
     "strict": true,
-    "noImplicitAny": true, // Be explicit about disallowing 'any' types
+    "noImplicitAny": true, // Be explicit about disallowing 'any' types // UNIQUE_CHANGE_FOR_COMMIT_47
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,

@@ -12,7 +12,7 @@ services:
       - ecommerce-network
     depends_on:
       - mongo
-    restart: unless-stopped # Added restart policy
+    restart: unless-stopped # Added restart policy # UNIQUE_CHANGE_FOR_COMMIT_48
     deploy:
       replicas: 2
 

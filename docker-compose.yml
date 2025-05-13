@@ -3,7 +3,7 @@ version: "3.8"
 services:
   user-service:
     build: ./user-service
-    ports:
+    ports: # This service will be accessible on host port 5000
       - 5000:5000
     environment:
       - MONGO_URI=${MONGO_URI_USERS}
@@ -12,13 +12,13 @@ services:
       - ecommerce-network
     depends_on:
       - mongo
-    restart: unless-stopped # Added restart policy # UNIQUE_CHANGE_FOR_COMMIT_48
-    deploy:
-      replicas: 2
+    restart: unless-stopped # Added restart policy
+    # deploy: # Temporarily removed to avoid port conflicts with multiple replicas
+    #   replicas: 2
 
   product-service:
     build: ./product-service
-    ports:
+    ports: # This service will be accessible on host port 5001
       - 5001:5001
     environment:
       - MONGO_URI=${MONGO_URI_PRODUCTS}
@@ -26,39 +26,45 @@ services:
       - ecommerce-network
     depends_on:
       - mongo
-    deploy:
-      replicas: 2
+    # deploy: # Temporarily removed
+    #   replicas: 2
 
   shopping-cart-service:
     build: ./shopping-cart-service
-    ports:
+    ports: # This service will be accessible on host port 5002
       - 5002:5002
     environment:
       - MONGO_URI=${MONGO_URI_CART}
+      # Ensure PRODUCT_SERVICE_URI is set in your .env for shopping-cart-service
+      # e.g., PRODUCT_SERVICE_URI=http://product-service:5001
     networks:
       - ecommerce-network
     depends_on:
       - mongo
-    deploy:
-      replicas: 2
+      - product-service # Added explicit dependency
+    # deploy: # Temporarily removed
+    #   replicas: 2
 
   order-service:
     build: ./order-service
-    ports:
+    ports: # This service will be accessible on host port 5003
       - 5003:5003
     environment:
       - MONGO_URI=${MONGO_URI_ORDER}
+      # Ensure PRODUCT_SERVICE_URI is set in your .env for order-service
+      # e.g., PRODUCT_SERVICE_URI=http://product-service:5001
     networks:
       - ecommerce-network
     depends_on:
       - mongo
-    deploy:
-      replicas: 2
+      - product-service # Added explicit dependency
+    # deploy: # Temporarily removed
+    #   replicas: 2
 
   payment-service:
     build: ./payment-service
-    ports:
-      - 5004:5004
+    ports: # This service will be accessible on host port 5719
+      - 5719:5004 # Host port 5719 maps to container port 5004
     environment:
       - MONGO_URI=${MONGO_URI_PAYMENT}
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
@@ -66,12 +72,12 @@ services:
       - ecommerce-network
     depends_on:
       - mongo
-    deploy:
-      replicas: 2
+    # deploy: # Temporarily removed
+    #   replicas: 2
 
   notification-service:
     build: ./notification-service
-    ports:
+    ports: # This service will be accessible on host port 5005
       - 5005:5005
     environment:
       - NODEMAILER_EMAIL=${NODEMAILER_EMAIL}
@@ -81,6 +87,10 @@ services:
       - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER}
     networks:
       - ecommerce-network
+    # No depends_on mongo needed if it doesn't directly use it, but often they do for storing notification history.
+    # If it does, add:
+    # depends_on:
+    #   - mongo
 
   mongo:
     image: mongo
@@ -93,18 +103,20 @@ services:
 
   nginx:
     image: nginx:latest
-    ports:
+    ports: # Nginx will be accessible on host port 80
       - "80:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro # Added :ro for read-only mount
     networks:
       - ecommerce-network
-    depends_on:
+    depends_on: # Nginx should wait for all backend services to be available
       - user-service
       - product-service
       - shopping-cart-service
       - order-service
       - payment-service
+      - notification-service # Added notification-service here
+    restart: always # Good practice for a gateway
 
 volumes:
   mongo-data:
@@ -112,3 +124,36 @@ volumes:
 networks:
   ecommerce-network:
     driver: bridge
+
+
+# **Key changes made in the YAML above:**
+
+# 1.  **Commented out `deploy: replicas: 2`** for `user-service`, `product-service`, `shopping-cart-service`, `order-service`, and `payment-service`. This will ensure only one instance of each starts, avoiding the host port conflicts.
+# 2.  **Added explicit `depends_on` for `product-service`** in `shopping-cart-service` and `order-service` because they rely on `PRODUCT_SERVICE_URI`. While Nginx also has `depends_on`, it's good for services to declare direct dependencies if they make direct calls during startup or initialization.
+# 3.  Added `notification-service` to `nginx`'s `depends_on` list for completeness.
+# 4.  Added `:ro` (read-only) to the `nginx.conf` volume mount, which is good practice for configuration files.
+# 5.  Added `restart: always` to `nginx`.
+
+
+
+
+# 1.  **Ensure all previous containers are stopped and removed:**
+#     ```bash
+#     docker compose down
+#     ```
+#     (This is very important to release any bound ports and remove old containers).
+# 2.  **Try starting everything again:**
+#     ```bash
+#     docker compose up -d --build
+#     ```
+# 3.  **Check the status:**
+#     ```bash
+#     docker compose ps
+#     ```
+#     All services should now be up and running (1 instance each).
+# 4..  **Check logs** if any service fails to start:
+#     ```bash
+#     docker compose logs <service_name>
+#     ```
+
+# This should resolve the port binding errors. If you later want to test with 2 replicas for a service (e.g., `user-service`), you would uncomment its `deploy: replicas: 2` section, but you should *also remove its `ports:` section* (e.g., remove `ports: - 5000:5000` from `user-service`). Nginx would then be responsible for load balancing requests to the two `user-service` instances via `http://user-service:5000` within the Docker netwo

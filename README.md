@@ -166,6 +166,20 @@ docker compose up --build
 
 The `--build` flag ensures that Docker images are rebuilt if there are any changes in the code or Dockerfiles (e.g., after TypeScript compilation changes).
 
+## API Testing
+
+For detailed instructions on how to test the API endpoints using Postman or Insomnia, please refer to the [API Testing Guide](API_TESTING_GUIDE.md).
+
+Below are some example screenshots for common Postman operations:
+
+**1. User Registration Example:**
+![Postman User Registration](register.png)
+
+**2. Create Product Example:**
+![Postman Create Product](create-product.png)
+
+---
+
 ## GitHub Actions (CI/CD) Requirements
 
 For the CI/CD pipeline to successfully push Docker images to Docker Hub, ensure the following GitHub secrets are configured in your repository:
